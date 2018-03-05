@@ -2,6 +2,7 @@ package info.juanmendez.geovolumecore.types.fence
 
 
 import info.juanmendez.geovolumecore.types.fence.models.*
+import java.util.concurrent.TimeUnit
 
 /**
  * Created by juan on 2/6/18.
@@ -47,5 +48,24 @@ class FenceUtils {
          * get all fences which are valid from volumeFence
          */
         fun getActiveFences( volumeFence: VolumeFence )=volumeFence.asList().filter { FenceUtils.isValid(it) }
+
+
+        /**
+         * Any fence must expire once its timeFence is up.
+         * This method checks for that comparing current time in milliseconds.
+         * If there is a difference of a minute or less, then it returns true
+         */
+        fun isTimeExpired( volumeFence: VolumeFence ):Boolean{
+            var timeFence = volumeFence.timeFence
+            var isTimeExpired = timeFence.isActive && System.currentTimeMillis() >= timeFence.expiration
+
+            return isTimeExpired
+        }
+
+        fun updateFromCancellation(fence: VolumeFence) {
+            fence.isActive = false
+            fence.timeFence.expiration = 0
+            fence.timeFence.interval = 0
+        }
     }
 }

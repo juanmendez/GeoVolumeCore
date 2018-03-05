@@ -3,7 +3,10 @@ package info.juanmendez.geovolumecore
 import info.juanmendez.geovolumecore.types.awareness.CoreAwarenessService
 import info.juanmendez.geovolumecore.types.location.CoreLocationFinder
 import info.juanmendez.geovolumecore.types.location.CoreNetworkService
-import info.juanmendez.geovolumecore.ui.form.*
+import info.juanmendez.geovolumecore.ui.form.CoreFormView
+import info.juanmendez.geovolumecore.ui.form.FenceSession
+import info.juanmendez.geovolumecore.ui.form.FormModule
+import info.juanmendez.geovolumecore.ui.form.FormPresenter
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -34,9 +37,6 @@ class LocationFinderTest {
     @Mock
     lateinit var view:CoreFormView
     lateinit var presenter:FormPresenter
-
-    @Mock
-    lateinit var session: CoreFenceSession
 
     @Mock lateinit var aws: CoreAwarenessService
     lateinit var twistAwarenessService:TwistAwarenessService

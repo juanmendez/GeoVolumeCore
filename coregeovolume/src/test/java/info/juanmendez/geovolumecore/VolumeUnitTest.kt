@@ -3,6 +3,8 @@ package info.juanmendez.geovolumecore
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import info.juanmendez.geovolumecore.types.awareness.CoreAwarenessService
+import info.juanmendez.geovolumecore.types.fence.models.FenceEvent
+import info.juanmendez.geovolumecore.types.fence.models.VolumeFence
 import info.juanmendez.geovolumecore.types.volume.VolumeManager
 import info.juanmendez.geovolumecore.types.volume.CoreVolumeAdapter
 import info.juanmendez.geovolumecore.types.volume.CoreVolumeStorage
@@ -116,5 +118,48 @@ class VolumeUnitTest {
         var h1:HashMap<Int,Int>? = Gson().fromJson( "", type )
         assertNotNull( h1?:HashMap<Int,Int>() )
         assertNull( h1 )
+    }
+
+    /**
+     * user's device is muted, then it is rebooted, and the fence is running again.
+     * The problem is VolumeManager might attempt to mute a muted device. Collecting
+     * current levels which are all level 0, and keeping them to restore the volume levels
+     * at a later time
+     */
+    @Test
+    fun muteWhatsMuted(){
+
+        val hashMap = HashMap<Int, Int>()
+        hashMap[1] = 1
+        hashMap[2] = 1
+        hashMap[3] = 1
+        hashMap[4] = 1
+        adapter.levels = hashMap
+
+        twistAwarenessService.fence = VolumeFence( true, "hello")
+        //fence value is false, meaning mute the phone!
+        twistAwarenessService.subject.onNext( FenceEvent(FenceEvent.FENCE_UPDATED, "hello", true ))
+
+        assertTrue( twistVolume.storage.levels.all { it.value==1 } )
+
+        //phone is rebooted, now what? there is an attempt to mute the phone based on Fence conditions
+        twistAwarenessService.subject.onNext( FenceEvent(FenceEvent.FENCE_UPDATED, "hello", true ))
+
+        //this should remain true, despite doing it twice, but we get an error
+        //but now we ensure not to update new levels if device is already been muted
+        assertTrue( twistVolume.storage.levels.all { it.value==1 } )
+        assertTrue( twistVolume.adapter.levels.all { it.value == 0 })
+
+        //ok we want to unmute the device
+        twistAwarenessService.subject.onNext( FenceEvent(FenceEvent.FENCE_UPDATED, "hello", false ))
+        assertTrue( twistVolume.adapter.levels.all { it.value == 1 })
+        assertTrue( twistVolume.storage.levels.all { it.value==1 } ) // they are just kept on hold
+
+        //lets do this also if phone is rebooted
+        twistAwarenessService.subject.onNext( FenceEvent(FenceEvent.FENCE_UPDATED, "hello", false ))
+        assertTrue( twistVolume.adapter.levels.all { it.value == 1 })
+
+        //so TDD has helped greatly to fix my issue which dealt with rebooting the phone, and canceling the fence
+        //the volume levels were all zero
     }
 }

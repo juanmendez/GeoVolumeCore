@@ -15,15 +15,15 @@ class VolumeManager (val adapter: CoreVolumeAdapter, val storage: CoreVolumeStor
          * Upon having fenceKey deactivated, lets resume the volume
          */
         awarenessService.listen().subscribe({
-                if( it.status == FenceEvent.FENCE_UPDATED){
-                    if( it.fenceValue){
-                        restoreThem()
-                    }else{
-                        muteThem()
-                    }
-                }else if( it.status == FenceEvent.FENCE_CANCELED){
-                   restoreThem()
-                }})
+            when {
+                it.status == FenceEvent.FENCE_UPDATED -> if( it.fenceValue){
+                    muteThem()
+                }else{
+                    restoreThem()
+                }
+                it.status == FenceEvent.FENCE_CANCELED -> restoreThem()
+            }
+        })
     }
 
     /**
@@ -37,7 +37,6 @@ class VolumeManager (val adapter: CoreVolumeAdapter, val storage: CoreVolumeStor
             muteThem()
         }
 
-        storage.mute = !storage.mute
     }
 
     fun getStoredLevels()=storage.levels.clone()
@@ -67,13 +66,18 @@ class VolumeManager (val adapter: CoreVolumeAdapter, val storage: CoreVolumeStor
          */
         if( unmutedSet.isNotEmpty() )
             adapter.levels = unmutedSet
+
+        storage.mute = false
     }
 
     private fun muteThem(){
         /**
-         * back up volume levels, and mute adapter
+         * back up volume levels, if it hasn't been muted before
          */
-        storage.levels = adapter.levels
-        adapter.muteLevels()
+        if( !storage.mute ){
+            storage.levels = adapter.levels
+            adapter.muteLevels()
+            storage.mute = true
+        }
     }
 }

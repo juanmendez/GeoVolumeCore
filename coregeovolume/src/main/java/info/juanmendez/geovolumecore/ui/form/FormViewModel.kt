@@ -18,7 +18,7 @@ class FormViewModel( private  val volumeFence:VolumeFence):BaseObservable() {
     private var mHeadphoneFence: HeadphoneFence = volumeFence.headphoneFence
     private var mTimeFence: TimeFence = volumeFence.timeFence
 
-    var isOnline:ObservableBoolean= ObservableBoolean(false)
+    var isOnline:ObservableBoolean= ObservableBoolean(true)
     var hasLocationPermission:ObservableBoolean = ObservableBoolean(false)
     val isVolumeFenceValid:ObservableBoolean = ObservableBoolean(false)
     val isVolumeFenceActive = ObservableBoolean()

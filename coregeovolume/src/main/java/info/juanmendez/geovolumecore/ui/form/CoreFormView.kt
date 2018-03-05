@@ -8,4 +8,6 @@ import io.reactivex.Single
 /**
  * Created by @juanmendezinfo on 2/3/18.
  */
-interface CoreFormView {}
+interface CoreFormView {
+    fun browseLocation(lat: Double, lon: Double)
+}

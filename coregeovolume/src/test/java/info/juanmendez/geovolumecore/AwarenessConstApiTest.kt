@@ -80,7 +80,7 @@ class AwarenessConstApiTest {
         twistAwarenessService.subject.onNext( event )
         observer.assertOf {  event }
 
-        aws.stopCurrentFence()
+        aws.stopCurrentFence( )
         assertFalse( aws.getLastFence()?.isActive ?: true )
         observer.assertOf {  FenceEvent( FenceEvent.FENCE_CANCELED, fence.key) }
     }

@@ -3,7 +3,9 @@ package info.juanmendez.geovolumecore
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.doAnswer
 import com.nhaarman.mockito_kotlin.doReturn
+import info.juanmendez.geovolumecore.types.awareness.CoreAwarenessBuilder
 import info.juanmendez.geovolumecore.types.awareness.CoreAwarenessService
+import info.juanmendez.geovolumecore.types.awareness.CoreFenceStorage
 import info.juanmendez.geovolumecore.types.awareness.CoreFenceTable
 import info.juanmendez.geovolumecore.types.fence.models.FenceEvent
 import info.juanmendez.geovolumecore.types.fence.models.VolumeFence
@@ -55,5 +57,46 @@ class TwistAwarenessService( service: CoreAwarenessService){
         }.`when`(service).getLastFence()
 
         doReturn( subject ).`when`(service).listen()
+    }
+
+    var headphonesOn = false
+}
+
+class TwistFenceStorage(fenceStorage:CoreFenceStorage){
+    private var fence = VolumeFence(false)
+    private var cancellationPending = false
+
+    init {
+        doAnswer {
+            fence
+        }.`when`(fenceStorage).lastFence
+
+
+        doAnswer {
+            fence = it.getArgument(0)
+        }.`when`(fenceStorage).lastFence = any()
+
+
+        doAnswer {
+            cancellationPending
+        }.`when`(fenceStorage).cancellationPending
+
+
+        doAnswer {
+            cancellationPending = it.getArgument(0)
+        }.`when`(fenceStorage).cancellationPending = any()
+    }
+}
+
+
+class TwistAwarenessBuilder( builder:CoreAwarenessBuilder){
+
+    var areHeadphonesOn = false
+
+    init {
+        doAnswer {
+            var fn = it.getArgument<(Boolean)->Unit>(0)
+            fn( areHeadphonesOn )
+        }.`when`(builder).getHeadphoneState( any() )
     }
 }

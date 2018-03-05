@@ -2,12 +2,16 @@ package info.juanmendez.geovolumecore
 
 import info.juanmendez.geovolumecore.types.awareness.CoreAwarenessService
 import info.juanmendez.geovolumecore.types.fence.*
+import info.juanmendez.geovolumecore.types.fence.models.FenceEvent
 import info.juanmendez.geovolumecore.types.fence.models.VolumeFence
 import info.juanmendez.geovolumecore.types.location.CoreLocationFinder
 import info.juanmendez.geovolumecore.types.location.CoreNetworkService
 import info.juanmendez.geovolumecore.types.location.models.Location
 import info.juanmendez.geovolumecore.ui.form.*
+import io.reactivex.Observable
+import org.joda.time.DateTime
 import org.joda.time.LocalTime
+import org.joda.time.Period
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Rule
@@ -52,7 +56,18 @@ class FenceUITest {
         module = FormModule( network, finder, FenceSession( aws), aws )
         volumeFence = module.session.fence
 
-        presenter = FormPresenter( view, module.apply { this.locationPermit = twistPermit.subject } )
+        presenter = FormPresenter( view, module.apply { this.locationPermit = ( twistPermit.subject as Observable<Boolean>) } )
+    }
+
+    @Test
+    fun testingJoda(){
+        var now = DateTime.now()
+        var then = DateTime.now().plus( Period.minutes( 10 ) )
+
+        var nowMs = now.millis
+        var thenMs = then.millis
+
+        assertTrue( nowMs < thenMs )
     }
 
 
@@ -204,13 +219,7 @@ class FenceUITest {
      */
     @Test
     fun rebuildFence(){
-        var newFence = VolumeFence(true).apply {
-            with( this.geoFence){
-                isActive = true
-                location = Location("New Home", "00 N. Magnolia", "Chicago, IL", 3.0, 4.0)
-                radius = 10
-            }
-        }
+
 
         twistPermit.grant = true
         twistNetwork.isOnline = true
@@ -222,6 +231,15 @@ class FenceUITest {
         var theirRadius = vm.radius
 
         //now we want to update fenceKey!
+
+        var newFence = VolumeFence(true).apply {
+            with( this.geoFence){
+                isActive = true
+                location = Location("New Home", "00 N. Magnolia", "Chicago, IL", 3.0, 4.0)
+                radius = 50
+            }
+        }
+
         module.session.fence = newFence
         presenter.refresh()
         assertNotSame( vm, presenter.getVM())
@@ -266,6 +284,16 @@ class FenceUITest {
         assertTrue( vm.isTimeFenceActive.get() )
         vm.isTimeFenceActive.set( false )
         assertFalse( timeFence.isActive )
+
+    }
+
+    @Test
+    fun userCancelsFenceBeforePlugging(){
+        volumeFence.isActive = true
+        twistAwarenessService.headphonesOn = true
+        twistAwarenessService.subject.onNext( FenceEvent( FenceEvent.FENCE_STARTED, "hello", true ))
+        twistAwarenessService.subject.onNext( FenceEvent( FenceEvent.FENCE_UPDATED, "hello", true ))
+        twistAwarenessService.subject.onNext( FenceEvent( FenceEvent.FENCE_CANCELED, "hello", true ))
 
     }
 
